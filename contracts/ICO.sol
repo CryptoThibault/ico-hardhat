@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/utils/Address.sol";
 contract ICO is Dev {
     using Address for address payable;
     address private _erc20;
-    uint256 private _balance;
     uint256 private _price;
     uint256 private _endTime;
     uint256 private constant _TIMESTAMP = 0;
@@ -36,17 +35,16 @@ contract ICO is Dev {
         return _endTime;
     }
     function balance() public view onlyOwner returns (uint) {
-        return _balance;
+        return address(this).balance;
     }
 
     function buy() public payable {
         require(msg.value / _price >= allowance(owner(), address(this)), "ICO: offer less than amount sent");
         require(_endTime < _TIMESTAMP, "ICO: cannot buy after end of ICO");
-        _balance += msg.value;
         transferFrom(owner(), msg.sender, msg.value / _price);
     }
     function withdraw() public  onlyOwner {
         require(_endTime > _TIMESTAMP, "ICO: cannot withdraw before end of ICO");
-        payable(msg.sender).sendValue(_balance);
+        payable(msg.sender).sendValue(address(this).balance);
     } 
 }
