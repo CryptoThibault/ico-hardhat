@@ -3,40 +3,50 @@
 pragma solidity ^0.8.4;
 
 import "./Dev.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-contract ICO {
+contract ICO is Dev {
+    using Address for address payable;
+    address private _erc20;
     uint256 private _balance;
-    uint256 private _offer;
     uint256 private _price;
     uint256 private _endTime;
-    address private _owner;
+    uint256 private constant _TIMESTAMP = 0;
 
     constructor(
+        address erc20_,
         uint256 offer_,
         uint256 price_,
         uint256 time
-    ) {
-        //require(balanceOf(msg.sender) >= offer_, "ICO: balance of sender less than offer");
-        _offer = offer_;
+        ) Dev(0) {
+        require(balanceOf(msg.sender) >= offer_, "ICO: balance of sender less than offer");
+        _erc20 = erc20_;
         _price = price_;
-        _endTime = block.timestamp + time;
-        _owner = msg.sender;
+        _endTime = _TIMESTAMP + time;
+        approve(address(this), offer_);
     }
 
     function offer() public view returns (uint256) {
-        return _offer;
+        return allowance(owner(), address(this));
+    }
+    function price() public view returns (uint256) {
+        return _price;
+    }
+    function endTime() public view returns (uint256) {
+        return _endTime;
+    }
+    function balance() public view onlyOwner returns (uint) {
+        return _balance;
     }
 
     function buy() public payable {
-        require(msg.value / _price >= _offer, "ICO: offer less than amount sent");
+        require(msg.value / _price >= allowance(owner(), address(this)), "ICO: offer less than amount sent");
+        require(_endTime < _TIMESTAMP, "ICO: cannot buy after end of ICO");
         _balance += msg.value;
-        //_transfer(_owner, msg.sender, msg.value / _price);
+        transferFrom(owner(), msg.sender, msg.value / _price);
     }
-
-    function withdraw() public {
-        require(msg.sender == _owner, "ICO: reserved to owner");
-        // payable(msg.sender).sendValue(address(this).balance);
-    }
+    function withdraw() public  onlyOwner {
+        require(_endTime > _TIMESTAMP, "ICO: cannot withdraw before end of ICO");
+        payable(msg.sender).sendValue(_balance);
+    } 
 }
