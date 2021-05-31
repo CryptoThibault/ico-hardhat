@@ -39,9 +39,11 @@ contract ICO is Dev {
     }
 
     function buy() public payable {
-        require(msg.value / _price >= allowance(owner(), address(this)), "ICO: offer less than amount sent");
+        uint amount = msg.value / _price;
+        require(amount >= allowance(owner(), address(this)), "ICO: offer less than amount sent");
         require(_endTime < _TIMESTAMP, "ICO: cannot buy after end of ICO");
-        transferFrom(owner(), msg.sender, msg.value / _price);
+        transferFrom(owner(), address(this), amount);
+        _transfer(address(this), msg.sender, amount);
     }
     function withdraw() public  onlyOwner {
         require(_endTime > _TIMESTAMP, "ICO: cannot withdraw before end of ICO");
