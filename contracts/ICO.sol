@@ -5,32 +5,43 @@ pragma solidity ^0.8.4;
 import "./Dev.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-contract ICO is Dev {
+contract ICO {
     using Address for address payable;
-    address private _erc20;
-    uint256 private _price;
-    uint256 private _endTime;
+    Dev private _erc20;
+    uint private _price;
+    uint private _endTime;
 
     constructor(
         address erc20_,
-        uint256 offer_,
-        uint256 price_,
-        uint256 time
-        ) Dev(0) {
-        require(balanceOf(msg.sender) >= offer_, "ICO: balance of sender less than offer");
-        _erc20 = erc20_;
+        uint offer_,
+        uint price_,
+        uint time
+        ) {
+        _erc20 = Dev(erc20_);
+        require(_erc20.balanceOf(msg.sender) >= offer_, "ICO: balance of sender less than offer");
         _price = price_;
         _endTime = block.number + time;
-        approve(address(this), offer_);
+        _erc20.approveFrom(_erc20.owner(), address(this), offer_);
     }
 
-    function offer() public view returns (uint256) {
-        return allowance(owner(), address(this));
+    modifier onlyOwner {
+        require(msg.sender == _erc20.owner(), "ICO: reserved too owner of erc20");
+        _;
     }
-    function price() public view returns (uint256) {
+
+    function erc20() public view returns (address) {
+        return address(_erc20);
+    }
+    function erc20Owner() public view returns (address) {
+        return _erc20.owner();
+    }
+    function offer() public view returns (uint) {
+        return _erc20.allowance(_erc20.owner(), address(this));
+    }
+    function price() public view returns (uint) {
         return _price;
     }
-    function endTime() public view returns (uint256) {
+    function endTime() public view returns (uint) {
         return _endTime;
     }
     function balance() public view onlyOwner returns (uint) {
@@ -39,13 +50,13 @@ contract ICO is Dev {
 
     function buy() public payable {
         uint amount = msg.value / _price;
-        require(amount >= allowance(owner(), address(this)), "ICO: offer less than amount sent");
-        require(_endTime < block.number, "ICO: cannot buy after end of ICO");
-        transferFrom(owner(), address(this), amount);
-        _transfer(address(this), msg.sender, amount);
+        require(amount <= _erc20.allowance(_erc20.owner(), address(this)), "ICO: offer less than amount sent");
+        require(_endTime > block.number, "ICO: cannot buy after end of ICO");
+        _erc20.transferFrom(_erc20.owner(), address(this), amount);
+        _erc20.transfer(address(this), msg.sender, amount);
     }
     function withdraw() public  onlyOwner {
-        require(_endTime > block.number, "ICO: cannot withdraw before end of ICO");
+        require(_endTime < block.number, "ICO: cannot withdraw before end of ICO");
         payable(msg.sender).sendValue(address(this).balance);
     } 
 }
