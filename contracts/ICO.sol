@@ -20,7 +20,7 @@ contract ICO {
         _erc20 = Dev(erc20_);
         require(_erc20.balanceOf(msg.sender) >= offer_, "ICO: balance of sender less than offer");
         _price = price_;
-        _endTime = block.number + time;
+        _endTime = block.timestamp + time;
         _erc20.approveFrom(_erc20.owner(), address(this), offer_);
     }
 
@@ -51,12 +51,12 @@ contract ICO {
     function buy() public payable {
         uint amount = msg.value / _price;
         require(amount <= _erc20.allowance(_erc20.owner(), address(this)), "ICO: offer less than amount sent");
-        require(_endTime > block.number, "ICO: cannot buy after end of ICO");
+        require(_endTime > block.timestamp, "ICO: cannot buy after end of ICO");
         _erc20.transferFrom(_erc20.owner(), address(this), amount);
         _erc20.transfer(address(this), msg.sender, amount);
     }
     function withdraw() public  onlyOwner {
-        require(_endTime < block.number, "ICO: cannot withdraw before end of ICO");
+        require(_endTime < block.timestamp, "ICO: cannot withdraw before end of ICO");
         payable(msg.sender).sendValue(address(this).balance);
     } 
 }
