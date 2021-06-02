@@ -67,7 +67,7 @@ describe('ICO', async function () {
     it('Should revert function if end time reach', async function () {
       await ethers.provider.send('evm_increaseTime', [TIME]);
       await ethers.provider.send('evm_mine');
-      expect(await ico.connect(bob).buy({ value: BUY_AMOUNT })).to.revertedWith('ICO: cannot buy after end of ICO');
+      await expect(ico.connect(bob).buy({ value: BUY_AMOUNT })).to.be.revertedWith('ICO: cannot buy after end of ICO');
     });
   });
   describe('Withdraw', async function () {
@@ -88,6 +88,9 @@ describe('ICO', async function () {
     });
     it('Should emits event Approval with good args (owner -> ico)', async function () {
       expect(WITHDRAW).to.emit(erc20, 'Approval').withArgs(owner.address, ico.address, 0);
+    });
+    it('Should revert function if sender is not owner', async function () {
+      await expect(ico.connect(bob).withdraw()).to.be.revertedWith('ICO: reserved too owner of erc20');
     });
     it('Should revert function if end time not reach', async function () {
       ico = await ICO.connect(owner).deploy(erc20.address, OFFER_SUPPLY, PRICE, TIME);
