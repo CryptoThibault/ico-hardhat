@@ -36,7 +36,8 @@ describe('Calculator', async function () {
       expect(APPROVE).to.emit(erc20, 'Approval').withArgs(alice.address, calculator.address, 10 ^ 18);
     });
     it('ADD: 10 + 5 = 15', async function () {
-      expect(ADD = await calculator.add(10, 5)).to.equal(15);
+      ADD = await calculator.add(10, 5);
+      expect(ADD).to.equal(15);
     });
     it('SUB: 10 - 5 = 5', async function () {
       expect(await calculator.sub(10, 5)).to.equal(5);
@@ -61,10 +62,18 @@ describe('Calculator', async function () {
     it('Should increase calculator balance', async function () {
       expect(await erc20.balanceOf(calculator.address)).to.equal(PRICE.mul(5));
     });
+    it('Should transfer tokens at each calculation', async function () {
+      expect(ADD).to.changeTokenBalance(erc20, calculator, PRICE);
+    });
     it('Should emits event Transfer at each calculation', async function () {
       expect(ADD).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
     });
-    it('Should revert calculation if balance of user less than price', async function () {
+    it('Should revert calculation if balance of user is less than price', async function () {
+      await expect(calculator.connect(bob).add(10, 5))
+        .to.be.revertedWith('Calculator: balance of sender lower than price');
+    });
+    it('Should revert calculation if allowance of user is less than price', async function () {
+      await erc20.transfer(bob.address, USER_SUPPLY);
       await expect(calculator.connect(bob).add(10, 5))
         .to.be.revertedWith('Calculator: balance of sender lower than price');
     });

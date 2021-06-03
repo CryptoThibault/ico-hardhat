@@ -21,7 +21,7 @@ describe('Dev', async function () {
   it('Should mint initial supply to owner', async function () {
     expect(await erc20.balanceOf(owner.address)).to.equal(INITIAL_SUPPLY);
   });
-  it('Should emit events Transfer when deploy', async function () {
+  it('Should emits event Transfer when deploy', async function () {
     const receipt = await erc20.deployTransaction.wait();
     await expect(receipt.transactionHash)
       .to.emit(erc20, 'Transfer')
