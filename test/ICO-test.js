@@ -16,6 +16,7 @@ describe('ICO', async function () {
     ICO = await ethers.getContractFactory('ICO');
     ico = await ICO.connect(owner).deploy(erc20.address, OFFER_SUPPLY, PRICE, TIME);
     await ico.deployed();
+    await erc20.approve(ico.address, OFFER_SUPPLY);
   });
   describe('Deployment', async function () {
     it('Should mint initial supply to owner', async function () {
@@ -101,11 +102,6 @@ describe('ICO', async function () {
       expect(WITHDRAW)
         .to.emit(ico, 'Withdrew')
         .withArgs(owner.address, BUY_AMOUNT);
-    });
-    it('Should emits event Approval with good args', async function () {
-      expect(WITHDRAW)
-        .to.emit(erc20, 'Approval')
-        .withArgs(owner.address, ico.address, 0);
     });
     it('Should revert function if sender is not owner', async function () {
       await expect(ico.connect(bob).withdraw())

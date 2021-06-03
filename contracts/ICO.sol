@@ -24,7 +24,6 @@ contract ICO {
         require(_erc20.balanceOf(msg.sender) >= offer_, "ICO: balance of sender less than offer");
         _price = price_;
         _endTime = block.timestamp + time;
-        _erc20.approveFrom(offer_);
     }
 
     function erc20() public view returns (address) {
@@ -59,7 +58,6 @@ contract ICO {
         require(msg.sender == _erc20.owner(), "ICO: reserved too owner of erc20");
         require(_endTime < block.timestamp, "ICO: cannot withdraw before end of ico");
         uint amount = address(this).balance;
-        _erc20.approveFrom(0);
         payable(msg.sender).sendValue(amount);
         emit Withdrew(msg.sender, amount);
         return true;

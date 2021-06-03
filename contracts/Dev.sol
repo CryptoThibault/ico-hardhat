@@ -9,8 +9,4 @@ contract Dev is ERC20, Ownable {
     constructor(uint initialSupply) ERC20("Dev Token", "DEV") Ownable() {
         _mint(msg.sender, initialSupply);
     }
-    function approveFrom(uint amount) external virtual returns (bool) {
-        _approve(owner(), msg.sender, amount);
-        return true;
-    }
 }
