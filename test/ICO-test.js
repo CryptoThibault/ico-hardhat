@@ -54,20 +54,34 @@ describe('ICO', async function () {
     it('Should increase balance of ico', async function () {
       expect(await ico.balance()).to.equal(BUY_AMOUNT);
     });
-    it('Should emits event Transfer with good args (owner -> user)', async function () {
+    it('Should emits event Transfer with good args', async function () {
       expect(BUY)
         .to.emit(erc20, 'Transfer')
         .withArgs(owner.address, alice.address, BUY_AMOUNT.div(PRICE));
     });
-    it('Should emits event Approval with good args (owner -> ico)', async function () {
+    it('Should emits event Approval with good args', async function () {
       expect(BUY)
         .to.emit(erc20, 'Approval')
         .withArgs(owner.address, ico.address, OFFER_SUPPLY.sub(BUY_AMOUNT.div(PRICE)));
     });
+    it('Should emits event Bought with good args', async function () {
+      expect(BUY)
+        .to.emit(ico, 'Bought')
+        .withArgs(alice.address, BUY_AMOUNT);
+    });
+    it('Should revert function if value is higher than offer', async function () {
+      await expect(ico.connect(bob).buy({ value: OFFER_SUPPLY.mul(PRICE) }))
+        .to.be.revertedWith('ICO: offer less than amount sent');
+    });
     it('Should revert function if end time reach', async function () {
       await ethers.provider.send('evm_increaseTime', [TIME]);
       await ethers.provider.send('evm_mine');
-      await expect(ico.connect(bob).buy({ value: BUY_AMOUNT })).to.be.revertedWith('ICO: cannot buy after end of ICO');
+      await expect(ico.connect(bob).buy({ value: BUY_AMOUNT }))
+        .to.be.revertedWith('ICO: cannot buy after end of ico');
+    });
+    it('Should revert function if sender is owner', async function () {
+      await expect(ico.connect(owner).buy({ value: BUY_AMOUNT }))
+        .to.be.revertedWith('ICO: owner cannot buy his token');
     });
   });
   describe('Withdraw', async function () {
@@ -83,19 +97,25 @@ describe('ICO', async function () {
     it('Should set balance of ico to 0', async function () {
       expect(await ico.balance()).to.equal(0);
     });
-    it('Should emits event Withdrew with good args (ico -> owner)', async function () {
-      expect(WITHDRAW).to.emit(ico, 'Withdrew').withArgs(owner.address, BUY_AMOUNT);
+    it('Should emits event Withdrew with good args', async function () {
+      expect(WITHDRAW)
+        .to.emit(ico, 'Withdrew')
+        .withArgs(owner.address, BUY_AMOUNT);
     });
-    it('Should emits event Approval with good args (owner -> ico)', async function () {
-      expect(WITHDRAW).to.emit(erc20, 'Approval').withArgs(owner.address, ico.address, 0);
+    it('Should emits event Approval with good args', async function () {
+      expect(WITHDRAW)
+        .to.emit(erc20, 'Approval')
+        .withArgs(owner.address, ico.address, 0);
     });
     it('Should revert function if sender is not owner', async function () {
-      await expect(ico.connect(bob).withdraw()).to.be.revertedWith('ICO: reserved too owner of erc20');
+      await expect(ico.connect(bob).withdraw())
+        .to.be.revertedWith('ICO: reserved too owner of erc20');
     });
     it('Should revert function if end time not reach', async function () {
       ico = await ICO.connect(owner).deploy(erc20.address, OFFER_SUPPLY, PRICE, TIME);
       await ico.deployed();
-      await expect(ico.connect(owner).withdraw()).to.be.revertedWith('ICO: cannot withdraw before end of ICO');
+      await expect(ico.connect(owner).withdraw())
+        .to.be.revertedWith('ICO: cannot withdraw before end of ico');
     });
   });
 });

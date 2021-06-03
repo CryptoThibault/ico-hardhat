@@ -10,7 +10,8 @@ contract ICO {
     Dev private _erc20;
     uint private _price;
     uint private _endTime;
-    event Withdrew(address indexed owner, uint256 value);
+    event Bought(address indexed buyer, uint value);
+    event Withdrew(address indexed owner, uint value);
 
     constructor(
         address erc20_,
@@ -24,11 +25,6 @@ contract ICO {
         _price = price_;
         _endTime = block.timestamp + time;
         _erc20.approveFrom(offer_);
-    }
-
-    modifier onlyOwner {
-        require(msg.sender == _erc20.owner(), "ICO: reserved too owner of erc20");
-        _;
     }
 
     function erc20() public view returns (address) {
@@ -46,23 +42,26 @@ contract ICO {
     function endTime() public view returns (uint) {
         return _endTime;
     }
-    function balance() public view onlyOwner returns (uint) {
+    function balance() public view returns (uint) {
         return address(this).balance;
     }
 
     function buy() public payable returns (bool) {
+        require(msg.sender != _erc20.owner(), "ICO: owner cannot buy his tokens");
+        require(_endTime > block.timestamp, "ICO: cannot buy after end of ico");
         uint amount = msg.value / _price;
         require(amount <= _erc20.allowance(_erc20.owner(), address(this)), "ICO: offer less than amount sent");
-        require(_endTime > block.timestamp, "ICO: cannot buy after end of ICO");
         _erc20.transferFrom(_erc20.owner(), msg.sender, amount);
+        emit Bought(msg.sender, msg.value);
         return true;
     }
-    function withdraw() public onlyOwner returns (bool) {
-        require(_endTime < block.timestamp, "ICO: cannot withdraw before end of ICO");
+    function withdraw() public returns (bool) {
+        require(msg.sender == _erc20.owner(), "ICO: reserved too owner of erc20");
+        require(_endTime < block.timestamp, "ICO: cannot withdraw before end of ico");
         uint amount = address(this).balance;
+        _erc20.approveFrom(0);
         payable(msg.sender).sendValue(amount);
         emit Withdrew(msg.sender, amount);
-        _erc20.approveEnd();
         return true;
     } 
 }
