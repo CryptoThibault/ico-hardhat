@@ -19,9 +19,6 @@ describe('ICO', async function () {
     await erc20.approve(ico.address, OFFER_SUPPLY);
   });
   describe('Deployment', async function () {
-    it('Should mint initial supply to owner', async function () {
-      expect(await erc20.balanceOf(owner.address)).to.equal(INITIAL_SUPPLY);
-    });
     it('Should be the good erc20 address', async function () {
       expect(await ico.erc20()).to.equal(erc20.address);
     });

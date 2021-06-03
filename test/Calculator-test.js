@@ -24,7 +24,7 @@ describe('Calculator', async function () {
       expect(await calculator.erc20Address()).to.equal(erc20.address);
     });
     it('Should be the good owner address', async function () {
-      expect(await calculator._erc20.owner()).to.equal(erc20.address);
+      expect(await calculator.ownerAddress()).to.equal(owner.address);
     });
   });
   describe('Calculation', async function () {

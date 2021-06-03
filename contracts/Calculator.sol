@@ -62,6 +62,9 @@ contract Calculator {
   function erc20Address() public view erc20Owner returns (address) {
     return address(_erc20);
   }
+  function ownerAddress() public view erc20Owner returns (address) {
+    return _erc20.owner();
+  }
   function price() public view returns (uint) {
     return _price;
   }
