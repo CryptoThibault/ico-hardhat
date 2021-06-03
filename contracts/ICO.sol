@@ -10,6 +10,7 @@ contract ICO {
     Dev private _erc20;
     uint private _price;
     uint private _endTime;
+
     event Bought(address indexed buyer, uint value);
     event Withdrew(address indexed owner, uint value);
 
@@ -20,7 +21,7 @@ contract ICO {
         uint time
         ) {
         _erc20 = Dev(erc20_);
-        require(msg.sender == _erc20.owner(), "ICO: only of erc20 can deploy this ico");
+        require(msg.sender == _erc20.owner(), "ICO: only owner of erc20 can deploy this ico");
         require(_erc20.balanceOf(msg.sender) >= offer_, "ICO: balance of sender less than offer");
         _price = price_;
         _endTime = block.timestamp + time;

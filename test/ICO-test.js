@@ -28,13 +28,13 @@ describe('ICO', async function () {
     it('Should be the good owner address', async function () {
       expect(await ico.erc20Owner()).to.equal(owner.address);
     });
-    it('Should approve ico address for offer', async function () {
+    it('Should be the good offer', async function () {
       expect(await ico.offer()).to.equal(OFFER_SUPPLY);
     });
-    it('Should have the good price', async function () {
+    it('Should be the good price', async function () {
       expect(await ico.price()).to.equal(PRICE);
     });
-    it('Should have the good end time', async function () {
+    it('Should be the good end time', async function () {
       expect(await ico.endTime()).to.above(TIME);
     });
   });
