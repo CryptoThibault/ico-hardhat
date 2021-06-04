@@ -3,7 +3,6 @@ const { ethers } = require('hardhat');
 
 describe('Calculator', async function () {
   let ERC20, erc20, CALCULATOR, calculator, owner, alice, bob;
-  let ADD, WITHDRAW;
   const INITIAL_SUPPLY = ethers.utils.parseEther('100');
   const USER_SUPPLY = ethers.utils.parseEther('10');
   const PRICE = 10;
@@ -52,16 +51,25 @@ describe('Calculator', async function () {
     });
   });
   describe('Payable', async function () {
+    let ADD, SUB, MUL, DIV, MOD;
     beforeEach(async function () {
       await erc20.connect(alice).approve(calculator.address, INITIAL_SUPPLY);
       ADD = await calculator.connect(alice).add(10, 5);
+      SUB = await calculator.connect(alice).sub(10, 5);
+      MUL = await calculator.connect(alice).mul(10, 5);
+      DIV = await calculator.connect(alice).div(10, 5);
+      MOD = await calculator.connect(alice).mod(10, 5);
     });
     it('Should change balances of user and calculator', async function () {
-      expect(await erc20.balanceOf(alice.address)).to.equal(USER_SUPPLY.sub(PRICE));
-      expect(await erc20.balanceOf(calculator.address)).to.equal(PRICE);
+      expect(await erc20.balanceOf(alice.address)).to.equal(USER_SUPPLY.sub(PRICE.mul(5)));
+      expect(await erc20.balanceOf(calculator.address)).to.equal(PRICE.mul(5));
     });
     it('Should emits event Transfer at each calculation', async function () {
       expect(ADD).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
+      expect(SUB).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
+      expect(MUL).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
+      expect(DIV).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
+      expect(MOD).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
     });
     it('Should revert calculation if balance of user is less than price', async function () {
       await expect(calculator.connect(bob).add(10, 5))
@@ -74,6 +82,7 @@ describe('Calculator', async function () {
     });
   });
   describe('Withdraw', async function () {
+    let WITHDRAW;
     beforeEach(async function () {
       await erc20.connect(alice).approve(calculator.address, INITIAL_SUPPLY);
       await calculator.connect(alice).add(10, 5);
