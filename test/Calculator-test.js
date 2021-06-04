@@ -62,7 +62,8 @@ describe('Calculator', async function () {
     });
     it('Should revert calculation if allowance of user is less than price', async function () {
       await erc20.connect(owner).transfer(bob.address, USER_SUPPLY);
-      await expect(calculator.connect(bob).add(10, 5)).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
+      await expect(calculator.connect(bob).add(10, 5))
+        .to.be.revertedWith('ERC20: transfer amount exceeds allowance');
     });
   });
   describe('Withdraw', async function () {
@@ -81,7 +82,7 @@ describe('Calculator', async function () {
     });
     it('Should revert transaction if sender is not owner of erc20', async function () {
       await calculator.connect(alice).add(10, 5);
-      await expect(erc20.connect(bob).withdrawTokens())
+      await expect(calculator.connect(bob).withdrawTokens())
         .to.be.revertedWith('Calculator: reserved to owner of the erc20');
     });
   });
