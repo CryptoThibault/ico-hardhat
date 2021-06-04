@@ -11,23 +11,18 @@ contract Calculator {
   event Calculation(address indexed sender, int nb1, int nb2, uint operator, int result);
 
   constructor(address erc20_, uint price_) {
-    require(msg.sender == _erc20.owner(), "Calculator: only owner of erc20 can deploy this calculator");
     _erc20 = Dev(erc20_);
+    require(msg.sender == _erc20.owner(), "Calculator: only owner of erc20 can deploy this calculator");
     _price = price_; 
   }
   modifier payWithTokens() {
-    require(_erc20.balanceOf(msg.sender) > _price, "Calculator: balance of sender lower than price");
+    require(_erc20.balanceOf(msg.sender) >= _price, "Calculator: price exceeds user balance");
     _erc20.transferFrom(msg.sender, address(this), _price);
     _;
   }
   modifier erc20Owner() {
     require(msg.sender == _erc20.owner(), "Calculator: reserved to owner of the erc20");
     _;
-  }
-
-  function approveContract() public returns (bool) {
-    _erc20.approve(msg.sender, 10^18);
-    return(true);
   }
 
   function withdrawTokens() public erc20Owner returns (bool) {

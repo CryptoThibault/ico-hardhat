@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 
 describe('Calculator', async function () {
   let ERC20, erc20, CALCULATOR, calculator, owner, alice, bob;
-  let APPROVE, ADD;
+  let APPROVE, ADD, WITHDRAW;
   const INITIAL_SUPPLY = ethers.utils.parseEther('100');
   const USER_SUPPLY = ethers.utils.parseEther('10');
   const PRICE = 10;
@@ -30,52 +30,59 @@ describe('Calculator', async function () {
   describe('Calculation', async function () {
     before(async function () {
       await erc20.transfer(alice.address, USER_SUPPLY);
-      APPROVE = await calculator.connect(alice).approveContract();
+      APPROVE = await erc20.connect(alice).approve(calculator.address, INITIAL_SUPPLY);
+      ADD = await calculator.connect(alice).add(10, 5);
     });
     it('Should emits event Approval at start', async function () {
-      expect(APPROVE).to.emit(erc20, 'Approval').withArgs(alice.address, calculator.address, 10 ^ 18);
+      expect(APPROVE).to.emit(erc20, 'Approval').withArgs(alice.address, calculator.address, INITIAL_SUPPLY);
     });
-    it('ADD: 10 + 5 = 15', async function () {
-      ADD = await calculator.add(10, 5);
-      expect(ADD).to.equal(15);
+    it('Should increase allowance of calculator at start', async function () {
+      expect(await erc20.allowance(alice.address, calculator.address)).to.be.equal(INITIAL_SUPPLY.sub(PRICE));
     });
-    it('SUB: 10 - 5 = 5', async function () {
-      expect(await calculator.sub(10, 5)).to.equal(5);
-    });
-    it('MUL: 10 * 5 = 50', async function () {
-      expect(await calculator.mul(10, 5)).to.equal(50);
-    });
-    it('DIV: 10 / 5 = 2', async function () {
-      expect(await calculator.div(10, 5)).to.equal(2);
-    });
-    it('MOD: 10 % 5 = 0', async function () {
-      expect(await calculator.mod(10, 5)).to.equal(0);
-    });
-    it('Should emits event Calculation', async function () {
+    it('Should emits event Calculation with good args', async function () {
       expect(ADD).to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 1, 15);
     });
   });
   describe('Payable', async function () {
     it('Should decrease user balance', async function () {
-      expect(await erc20.balanceOf(alice.address)).to.equal(USER_SUPPLY.sub(PRICE.mul(5)));
+      expect(await erc20.balanceOf(alice.address)).to.equal(USER_SUPPLY.sub(PRICE));
     });
     it('Should increase calculator balance', async function () {
-      expect(await erc20.balanceOf(calculator.address)).to.equal(PRICE.mul(5));
+      expect(await erc20.balanceOf(calculator.address)).to.equal(PRICE);
     });
     it('Should transfer tokens at each calculation', async function () {
-      expect(ADD).to.changeTokenBalance(erc20, calculator, PRICE);
+      expect(ADD).to.changeTokenBalance(erc20, alice, -PRICE);
     });
     it('Should emits event Transfer at each calculation', async function () {
       expect(ADD).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
     });
     it('Should revert calculation if balance of user is less than price', async function () {
       await expect(calculator.connect(bob).add(10, 5))
-        .to.be.revertedWith('Calculator: balance of sender lower than price');
+        .to.be.revertedWith('Calculator: price exceeds user balance');
     });
     it('Should revert calculation if allowance of user is less than price', async function () {
-      await erc20.transfer(bob.address, USER_SUPPLY);
-      await expect(calculator.connect(bob).add(10, 5))
-        .to.be.revertedWith('Calculator: balance of sender lower than price');
+      await erc20.connect(owner).transfer(bob.address, USER_SUPPLY);
+      await expect(calculator.connect(bob).add(10, 5)).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
+    });
+  });
+  describe('Withdraw', async function () {
+    before(async function () {
+      WITHDRAW = await calculator.connect(owner).withdrawTokens();
+    });
+    it('Should decrease calculator balance', async function () {
+      expect(await erc20.balanceOf(calculator.address)).to.equal(0);
+    });
+    it('Should increase owner balance', async function () {
+      expect(await erc20.balanceOf(owner.address)).to.equal(INITIAL_SUPPLY.sub(USER_SUPPLY.mul(2)).add(PRICE));
+    });
+    it('Should emits event Transfer with good args', async function () {
+      expect(WITHDRAW).to.emit(erc20, 'Transfer')
+        .withArgs(calculator.address, owner.address, PRICE);
+    });
+    it('Should revert transaction if sender is not owner of erc20', async function () {
+      await calculator.connect(alice).add(10, 5);
+      await expect(erc20.connect(bob).withdrawTokens())
+        .to.be.revertedWith('Calculator: reserved to owner of the erc20');
     });
   });
 });
