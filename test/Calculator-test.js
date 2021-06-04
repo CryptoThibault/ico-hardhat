@@ -61,8 +61,8 @@ describe('Calculator', async function () {
       MOD = await calculator.connect(alice).mod(10, 5);
     });
     it('Should change balances of user and calculator', async function () {
-      expect(await erc20.balanceOf(alice.address)).to.equal(USER_SUPPLY.sub(PRICE.mul(5)));
-      expect(await erc20.balanceOf(calculator.address)).to.equal(PRICE.mul(5));
+      expect(await erc20.balanceOf(alice.address)).to.equal(USER_SUPPLY.sub(PRICE * 5));
+      expect(await erc20.balanceOf(calculator.address)).to.equal(PRICE * 5);
     });
     it('Should emits event Transfer at each calculation', async function () {
       expect(ADD).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
