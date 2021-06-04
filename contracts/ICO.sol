@@ -10,6 +10,8 @@ contract ICO {
     Dev private _erc20;
     uint private _price;
     uint private _endTime;
+    bool private _locked;
+    mapping(address => uint) private _tokensLocked;
 
     event Bought(address indexed buyer, uint value);
     event Withdrew(address indexed owner, uint value);
@@ -18,13 +20,15 @@ contract ICO {
         address erc20_,
         uint offer_,
         uint price_,
-        uint time
+        uint time,
+        bool locked_
         ) {
         _erc20 = Dev(erc20_);
         require(msg.sender == _erc20.owner(), "ICO: only owner of erc20 can deploy this ico");
         require(_erc20.balanceOf(msg.sender) >= offer_, "ICO: balance of sender less than offer");
         _price = price_;
         _endTime = block.timestamp + time;
+        _locked = locked_;
     }
 
     function erc20() public view returns (address) {
@@ -51,7 +55,10 @@ contract ICO {
         require(_endTime > block.timestamp, "ICO: cannot buy after end of ico");
         uint amount = msg.value / _price;
         require(amount <= _erc20.allowance(_erc20.owner(), address(this)), "ICO: offer less than amount sent");
-        _erc20.transferFrom(_erc20.owner(), msg.sender, amount);
+        if(_locked) {
+            _erc20.transferFrom(_erc20.owner(), address(this), amount);
+            _tokensLocked[msg.sender] += amount;
+        } else _erc20.transferFrom(_erc20.owner(), msg.sender, amount);
         emit Bought(msg.sender, msg.value);
         return true;
     }
@@ -62,5 +69,13 @@ contract ICO {
         payable(msg.sender).sendValue(amount);
         emit Withdrew(msg.sender, amount);
         return true;
-    } 
+    }
+
+    function claim() public returns (bool) {
+        require(_endTime < block.timestamp, "ICO: cannot claim before end of ico");
+        uint amount = _tokensLocked[msg.sender];
+        _tokensLocked[msg.sender] = 0;
+        _erc20.transfer(msg.sender, amount);
+        return true;
+    }
 }

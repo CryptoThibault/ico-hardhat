@@ -8,13 +8,14 @@ describe('ICO', async function () {
   const BUY_AMOUNT = ethers.utils.parseEther('1');
   const PRICE = 100;
   const TIME = 3600;
+  const LOCKED = false;
   before(async function () {
     ;[owner, alice, bob] = await ethers.getSigners();
     ERC20 = await ethers.getContractFactory('Dev');
     erc20 = await ERC20.connect(owner).deploy(INITIAL_SUPPLY);
     await erc20.deployed();
     ICO = await ethers.getContractFactory('ICO');
-    ico = await ICO.connect(owner).deploy(erc20.address, OFFER_SUPPLY, PRICE, TIME);
+    ico = await ICO.connect(owner).deploy(erc20.address, OFFER_SUPPLY, PRICE, TIME, LOCKED);
     await ico.deployed();
     await erc20.approve(ico.address, OFFER_SUPPLY);
   });
@@ -105,7 +106,7 @@ describe('ICO', async function () {
         .to.be.revertedWith('ICO: reserved too owner of erc20');
     });
     it('Should revert function if end time not reach', async function () {
-      ico = await ICO.connect(owner).deploy(erc20.address, OFFER_SUPPLY, PRICE, TIME);
+      ico = await ICO.connect(owner).deploy(erc20.address, OFFER_SUPPLY, PRICE, TIME, LOCKED);
       await ico.deployed();
       await expect(ico.connect(owner).withdraw())
         .to.be.revertedWith('ICO: cannot withdraw before end of ico');
