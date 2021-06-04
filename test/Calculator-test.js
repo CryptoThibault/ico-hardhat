@@ -50,9 +50,6 @@ describe('Calculator', async function () {
     it('Should increase calculator balance', async function () {
       expect(await erc20.balanceOf(calculator.address)).to.equal(PRICE);
     });
-    /* it('Should transfer tokens at each calculation', async function () {
-      expect(ADD).to.changeTokenBalances(erc20, [alice, calculator], [-PRICE, PRICE]);
-    }); */
     it('Should emits event Transfer at each calculation', async function () {
       expect(ADD).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
     });
