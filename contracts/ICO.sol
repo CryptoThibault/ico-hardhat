@@ -15,6 +15,7 @@ contract ICO {
 
     event Bought(address indexed buyer, uint value);
     event Withdrew(address indexed owner, uint value);
+    event Claimed(address indexed claimer, uint tokens);
 
     constructor(
         address erc20_,
@@ -76,6 +77,7 @@ contract ICO {
         uint amount = _tokensLocked[msg.sender];
         _tokensLocked[msg.sender] = 0;
         _erc20.transfer(msg.sender, amount);
+        emit Claimed(msg.sender, amount);
         return true;
     }
 }

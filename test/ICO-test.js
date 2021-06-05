@@ -7,9 +7,10 @@ describe('ICO', async function () {
   const OFFER_SUPPLY = ethers.utils.parseEther('20');
   const BUY_AMOUNT = ethers.utils.parseEther('1');
   const PRICE = 100;
+  const TOKEN_AMOUNT = BUY_AMOUNT.div(PRICE);
   const TIME = 3600;
-  const LOCKED = false;
-  before(async function () {
+  const LOCKED = true;
+  beforeEach(async function () {
     ;[owner, alice, bob] = await ethers.getSigners();
     ERC20 = await ethers.getContractFactory('Dev');
     erc20 = await ERC20.connect(owner).deploy(INITIAL_SUPPLY);
@@ -38,32 +39,32 @@ describe('ICO', async function () {
   });
   describe('Buy', async function () {
     let BUY;
-    before(async function () {
+    beforeEach(async function () {
       BUY = await ico.connect(alice).buy({ value: BUY_AMOUNT });
     });
-    it('Should increase balance of user', async function () {
-      expect(await erc20.balanceOf(alice.address)).to.equal(BUY_AMOUNT.div(PRICE));
+    it(`Should increase balance of ${LOCKED ? 'ico' : 'user'}`, async function () {
+      expect(await erc20.balanceOf(LOCKED ? ico.address : alice.address)).to.equal(TOKEN_AMOUNT);
     });
     it('Should decrease balance of owner', async function () {
-      expect(await erc20.balanceOf(owner.address)).to.equal(INITIAL_SUPPLY.sub(BUY_AMOUNT.div(PRICE)));
+      expect(await erc20.balanceOf(owner.address)).to.equal(INITIAL_SUPPLY.sub(TOKEN_AMOUNT));
     });
     it('Should descrease allowance of ico', async function () {
-      expect(await erc20.allowance(owner.address, ico.address)).to.equal(OFFER_SUPPLY.sub(BUY_AMOUNT.div(PRICE)));
+      expect(await erc20.allowance(owner.address, ico.address)).to.equal(OFFER_SUPPLY.sub(TOKEN_AMOUNT));
     });
-    it('Should increase balance of ico', async function () {
+    it('Should increase eth balance of ico', async function () {
       expect(await ico.balance()).to.equal(BUY_AMOUNT);
     });
-    it('Should emits event Transfer with good args', async function () {
+    it('Should emits event Transfer', async function () {
       expect(BUY)
         .to.emit(erc20, 'Transfer')
-        .withArgs(owner.address, alice.address, BUY_AMOUNT.div(PRICE));
+        .withArgs(owner.address, LOCKED ? ico.address : alice.address, TOKEN_AMOUNT);
     });
-    it('Should emits event Approval with good args', async function () {
+    it('Should emits event Approval', async function () {
       expect(BUY)
         .to.emit(erc20, 'Approval')
-        .withArgs(owner.address, ico.address, OFFER_SUPPLY.sub(BUY_AMOUNT.div(PRICE)));
+        .withArgs(owner.address, ico.address, OFFER_SUPPLY.sub(TOKEN_AMOUNT));
     });
-    it('Should emits event Bought with good args', async function () {
+    it('Should emits event Bought', async function () {
       expect(BUY)
         .to.emit(ico, 'Bought')
         .withArgs(alice.address, BUY_AMOUNT);
@@ -85,7 +86,8 @@ describe('ICO', async function () {
   });
   describe('Withdraw', async function () {
     let WITHDRAW;
-    before(async function () {
+    beforeEach(async function () {
+      await ico.connect(alice).buy({ value: BUY_AMOUNT });
       await ethers.provider.send('evm_increaseTime', [TIME]);
       await ethers.provider.send('evm_mine');
       WITHDRAW = await ico.connect(owner).withdraw();
@@ -112,4 +114,37 @@ describe('ICO', async function () {
         .to.be.revertedWith('ICO: cannot withdraw before end of ico');
     });
   });
+  if (LOCKED) {
+    describe('Claim', async function () {
+      let CLAIM;
+      beforeEach(async function () {
+        await ico.connect(alice).buy({ value: BUY_AMOUNT });
+        await ethers.provider.send('evm_increaseTime', [TIME]);
+        await ethers.provider.send('evm_mine');
+        CLAIM = await ico.connect(alice).claim();
+      });
+      it('Should increse balance of user', async function () {
+        expect(await erc20.balanceOf(alice.address)).to.equal(TOKEN_AMOUNT);
+      });
+      it('Should decrease balance of ico', async function () {
+        expect(await erc20.balanceOf(ico.address)).to.equal(0);
+      });
+      it('Should emits event Transfer', async function () {
+        expect(CLAIM)
+          .to.emit(erc20, 'Transfer')
+          .withArgs(ico.address, alice.address, TOKEN_AMOUNT);
+      });
+      it('Should emits event Claimed', async function () {
+        expect(CLAIM)
+          .to.emit(ico, 'Claimed')
+          .withArgs(alice.address, TOKEN_AMOUNT);
+      });
+      it('Should reverts function if end time is not reach', async function () {
+        await ethers.provider.send('evm_increaseTime', [-TIME]);
+        await ethers.provider.send('evm_mine');
+        await expect(ico.connect(alice).claim())
+          .to.be.revertedWith('ICO: cannot claim before end of ico');
+      });
+    });
+  }
 });
