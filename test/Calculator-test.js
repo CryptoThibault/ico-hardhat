@@ -36,18 +36,18 @@ describe('Calculator', async function () {
       await erc20.connect(alice).approve(calculator.address, INITIAL_SUPPLY);
       expect(await erc20.allowance(alice.address, calculator.address)).to.be.equal(INITIAL_SUPPLY);
     });
-    it('Should emits event Calculation for each operators', async function () {
+    it('Should emits event Calculation for each operator', async function () {
       await erc20.connect(alice).approve(calculator.address, INITIAL_SUPPLY);
-      expect(await calculator.connect(alice).add(10, 5), 'ADD')
-        .to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 1, 15);
-      expect(await calculator.connect(alice).sub(10, 5), 'SUB')
-        .to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 2, 5);
-      expect(await calculator.connect(alice).mul(10, 5), 'MUL')
-        .to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 3, 50);
-      expect(await calculator.connect(alice).div(10, 5), 'DIV')
-        .to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 4, 2);
-      expect(await calculator.connect(alice).mod(10, 5), 'MOD')
-        .to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 5, 0);
+      expect(await calculator.connect(alice).add(10, 5))
+        .to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 'add', 15);
+      expect(await calculator.connect(alice).sub(10, 5))
+        .to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 'sub', 5);
+      expect(await calculator.connect(alice).mul(10, 5))
+        .to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 'mul', 50);
+      expect(await calculator.connect(alice).div(10, 5))
+        .to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 'div', 2);
+      expect(await calculator.connect(alice).mod(10, 5))
+        .to.emit(calculator, 'Calculation').withArgs(alice.address, 10, 5, 'mod', 0);
     });
   });
   describe('Payable', async function () {
@@ -64,12 +64,12 @@ describe('Calculator', async function () {
       expect(await erc20.balanceOf(alice.address)).to.equal(USER_SUPPLY.sub(PRICE * 5));
       expect(await erc20.balanceOf(calculator.address)).to.equal(PRICE * 5);
     });
-    it('Should emits event Transfer at each calculation', async function () {
-      expect(ADD, 'ADD').to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
-      expect(SUB, 'SUB').to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
-      expect(MUL, 'MUL').to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
-      expect(DIV, 'DIV').to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
-      expect(MOD, 'MOD').to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
+    it('Should emits event Transfer for each operator', async function () {
+      expect(ADD).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
+      expect(SUB).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
+      expect(MUL).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
+      expect(DIV).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
+      expect(MOD).to.emit(erc20, 'Transfer').withArgs(alice.address, calculator.address, PRICE);
     });
     it('Should revert calculation if balance of user is less than price', async function () {
       await expect(calculator.connect(bob).add(10, 5))
@@ -94,7 +94,7 @@ describe('Calculator', async function () {
     it('Should increase owner balance', async function () {
       expect(await erc20.balanceOf(owner.address)).to.equal(INITIAL_SUPPLY.sub(USER_SUPPLY).add(PRICE));
     });
-    it('Should emits event Transfer with good args', async function () {
+    it('Should emits event Transfer when owner get his tokens', async function () {
       expect(WITHDRAW).to.emit(erc20, 'Transfer')
         .withArgs(calculator.address, owner.address, PRICE);
     });

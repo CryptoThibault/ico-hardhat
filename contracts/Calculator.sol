@@ -8,7 +8,7 @@ contract Calculator {
   Dev private _erc20;
   uint private _price;
 
-  event Calculation(address indexed sender, int nb1, int nb2, uint operator, int result);
+  event Calculation(address indexed sender, int nb1, int nb2, string operator, int result);
 
   constructor(address erc20_, uint price_) {
     _erc20 = Dev(erc20_);
@@ -31,23 +31,23 @@ contract Calculator {
   }
 
   function add(int a, int b) public payWithTokens returns (int) {
-    emit Calculation(msg.sender, a, b, 1, a + b);
+    emit Calculation(msg.sender, a, b, "add", a + b);
     return a + b;
   }
   function sub(int a, int b) public payWithTokens returns (int) {
-    emit Calculation(msg.sender, a, b, 2, a - b);
+    emit Calculation(msg.sender, a, b, "sub", a - b);
     return a - b;
   }
   function mul(int a, int b) public payWithTokens returns (int) {
-    emit Calculation(msg.sender, a, b, 3, a * b);
+    emit Calculation(msg.sender, a, b, "mul", a * b);
     return a * b;
   }
   function div(int a, int b) public payWithTokens returns (int) {
-    emit Calculation(msg.sender, a, b, 4, a / b);
+    emit Calculation(msg.sender, a, b, "div", a / b);
     return a / b;
   }
   function mod(int a, int b) public payWithTokens returns (int) {
-    emit Calculation(msg.sender, a, b, 5, a % b);
+    emit Calculation(msg.sender, a, b, "mod", a % b);
     return a % b;
   }
 
