@@ -6,7 +6,7 @@ describe('Dev', async function () {
   const NAME = 'Dev Token';
   const SYMBOL = 'DEV';
   const INITIAL_SUPPLY = ethers.utils.parseEther('100');
-  before(async function () {
+  beforeEach(async function () {
     ;[owner] = await ethers.getSigners();
     ERC20 = await ethers.getContractFactory('Dev');
     erc20 = await ERC20.connect(owner).deploy(INITIAL_SUPPLY);
