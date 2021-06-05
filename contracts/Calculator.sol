@@ -17,8 +17,8 @@ contract Calculator {
     /** @notice
     * The sender of this calculator should be the same of the sender of the erc20 contract imported.
     *
-    * erc20: address of the erc20 imported
-    * price: price for one calculation
+    * @param erc20_: address of the erc20 imported
+    * @param price_: price for one calculation
     */
   constructor(address erc20_, uint price_) {
     _erc20 = Dev(erc20_);

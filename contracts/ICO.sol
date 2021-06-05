@@ -25,11 +25,11 @@ contract ICO {
     * The sender of this ico should be the same of the sender of the erc20 contract imported.
     * He should have the amount of offer in his account.
     *
-    * erc20: address of the erc20 imported
-    * offer: tokens avaible during this ico
-    * price: price in wei for a token (value / price = token value)
-    * time: seconds until the ico is ended
-    * locked: funds of buyers locked until the ico is ended
+    * @param erc20_: address of the erc20 imported
+    * @param offer_: tokens avaible during this ico
+    * @param price_: price in wei for a token (value / price = token value)
+    * @param time: seconds until the ico is ended
+    * @param locked_: funds of buyers locked until the ico is ended
     */
     constructor(
         address erc20_,

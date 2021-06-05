@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @notice This contract will deploy basic erc20 for test payable application. 
 contract Dev is ERC20, Ownable {
 
-    /// @notice It is ownable by the msg.sender, he can choose an initial supply to mint.
+    /// @notice It is ownable by the msg.sender, he can choose as @param initialSupply to mint.
     constructor(uint initialSupply) ERC20("Dev Token", "DEV") Ownable() {
         _mint(msg.sender, initialSupply);
     }
