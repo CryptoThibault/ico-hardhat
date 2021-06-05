@@ -106,6 +106,7 @@ contract ICO {
         emit Withdrew(msg.sender, amount);
         return true;
     }
+    
     /** @notice
     * Users can use this function for claim tokens if owner had choose locked option
     * They should wait end of ico before use this function
